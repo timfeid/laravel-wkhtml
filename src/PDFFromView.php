@@ -2,11 +2,12 @@
 
 namespace TimFeid\LaravelWkhtml;
 
-use Exception;
 use Illuminate\View\View;
 
 class PDFFromView
 {
+    const CONF_DIR_NAME = 'WKHTMLTOPDF_BIN_DIR';
+
     protected $bodyHtml;
     protected $headerHtml;
     protected $footerHtml;
@@ -20,15 +21,15 @@ class PDFFromView
     protected $storagePath;
     protected $tempName;
     protected $cleanupFiles = [];
-    protected $bin = 'wkhtmltopdf';
+    protected $bin;
 
     public function __construct($view, $data = [])
     {
         $this->loadView($view, $data);
         $this->tempName = uniqid(true).time();
         $this->storagePath = storage_path('app');
-        if (config('wkhtmltopdf.pdf')) {
-            $this->bin = config('wkhtmltopdf.pdf');
+        if (env(self::CONF_DIR_NAME)) {
+            $this->bin = rtrim(env(self::CONF_DIR_NAME), '/').'/';
         }
     }
 
@@ -160,7 +161,7 @@ class PDFFromView
 
         return response($output, 200, array(
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' =>  $type.'; filename="'.$filename.'"',
+            'Content-Disposition' => $type.'; filename="'.$filename.'"',
         ));
     }
 
@@ -181,27 +182,28 @@ class PDFFromView
 
     protected function storagePath($file = null)
     {
-        return $this->storagePath . DIRECTORY_SEPARATOR . $file;
+        return $this->storagePath.DIRECTORY_SEPARATOR.$file;
     }
 
     protected function options()
     {
         $options = [
-            '--margin-left ' . $this->marginLeft,
-            '--margin-right ' . $this->marginRight,
-            '--margin-top ' . $this->marginTop,
-            '--margin-bottom ' . $this->marginBottom,
-            '--header-spacing ' . $this->headerSpacing,
+            '--margin-left '.$this->marginLeft,
+            '--margin-right '.$this->marginRight,
+            '--margin-top '.$this->marginTop,
+            '--margin-bottom '.$this->marginBottom,
+            '--header-spacing '.$this->headerSpacing,
             '--no-stop-slow-scripts',
         ];
 
         if ($this->headerFile) {
-            $options[] = '--header-html ' . $this->headerFile;
+            $options[] = '--header-html '.$this->headerFile;
         }
 
         if ($this->footerFile) {
-            $options[] = '--footer-html ' . $this->footerFile;
+            $options[] = '--footer-html '.$this->footerFile;
         }
+
         return implode(' ', $options);
     }
 
@@ -218,6 +220,6 @@ class PDFFromView
         $options = $this->options();
         $file = $this->generateFile();
 
-        return "{$this->bin} $options {$file} $to_file";
+        return "{$this->bin}wkhtmltopdf $options {$file} $to_file";
     }
 }
