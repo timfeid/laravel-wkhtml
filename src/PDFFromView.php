@@ -2,6 +2,7 @@
 
 namespace TimFeid\LaravelWkhtml;
 
+use Exception;
 use Illuminate\View\View;
 
 class PDFFromView
@@ -19,12 +20,16 @@ class PDFFromView
     protected $storagePath;
     protected $tempName;
     protected $cleanupFiles = [];
+    protected $bin = 'wkhtmltopdf';
 
     public function __construct($view, $data = [])
     {
         $this->loadView($view, $data);
         $this->tempName = uniqid(true).time();
         $this->storagePath = storage_path('app');
+        if (config('wkhtmltopdf.pdf')) {
+            $this->bin = config('wkhtmltopdf.pdf');
+        }
     }
 
     protected function loadView($view, $data)
@@ -213,6 +218,6 @@ class PDFFromView
         $options = $this->options();
         $file = $this->generateFile();
 
-        return "wkhtmltopdf $options {$file} $to_file";
+        return "{$this->bin} $options {$file} $to_file";
     }
 }
