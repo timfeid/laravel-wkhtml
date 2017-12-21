@@ -22,6 +22,9 @@ class PDFFromView
     protected $tempName;
     protected $cleanupFiles = [];
     protected $bin;
+    protected $javascriptDelay = 0;
+    protected $dpi = 300;
+    protected $viewportSize = '1920x1080';
 
     public function __construct($view, $data = [])
     {
@@ -83,6 +86,27 @@ class PDFFromView
     public function setMarginTop($margin)
     {
         $this->marginTop = $margin;
+
+        return $this;
+    }
+
+    public function setJavascriptDelay($delay)
+    {
+        $this->javascriptDelay = $delay;
+
+        return $this;
+    }
+
+    public function setDpi($dpi)
+    {
+        $this->dpi = $dpi;
+
+        return $this;
+    }
+
+    public function setViewportSize($viewportSize)
+    {
+        $this->viewportSize = $viewportSize;
 
         return $this;
     }
@@ -168,7 +192,7 @@ class PDFFromView
     protected function exec()
     {
         $output = shell_exec($this->command());
-        $this->cleanUp();
+        // $this->cleanUp();
 
         return $output;
     }
@@ -194,6 +218,10 @@ class PDFFromView
             '--margin-bottom '.$this->marginBottom,
             '--header-spacing '.$this->headerSpacing,
             '--no-stop-slow-scripts',
+            "--viewport-size {$this->viewportSize}",
+            "--dpi {$this->dpi}",
+            "--javascript-delay {$this->javascriptDelay}",
+            "--debug-javascript",
         ];
 
         if ($this->headerFile) {
@@ -220,6 +248,6 @@ class PDFFromView
         $options = $this->options();
         $file = $this->generateFile();
 
-        return "{$this->bin}wkhtmltopdf $options {$file} $to_file";
+        return die("{$this->bin}wkhtmltopdf $options {$file} $to_file");
     }
 }
