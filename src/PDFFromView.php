@@ -248,6 +248,6 @@ class PDFFromView
         $options = $this->options();
         $file = $this->generateFile();
 
-        return die("{$this->bin}wkhtmltopdf $options {$file} $to_file");
+        return "{$this->bin}wkhtmltopdf $options {$file} $to_file";
     }
 }
