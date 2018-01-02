@@ -15,6 +15,7 @@ class PDFFromView
     protected $marginRight = '0mm';
     protected $marginTop = '0mm';
     protected $marginBottom = '0mm';
+    protected $pageSize = 'A4';
     protected $headerSpacing = 0;
     protected $headerFile;
     protected $footerFile;
@@ -47,8 +48,15 @@ class PDFFromView
 
     public function setMargins($margin)
     {
-        $this->setXMargins($margin);
-        $this->setYMargins($margin);
+        $this->setMarginX($margin);
+        $this->setMarginY($margin);
+
+        return $this;
+    }
+
+    public function setPageSize($pageSize)
+    {
+        $this->pageSize = $pageSize;
 
         return $this;
     }
@@ -182,6 +190,7 @@ class PDFFromView
     protected function response($type, $filename)
     {
         $output = $this->exec();
+        $this->cleanUp();
 
         return response($output, 200, array(
             'Content-Type' => 'application/pdf',
@@ -191,10 +200,20 @@ class PDFFromView
 
     protected function exec()
     {
-        $output = shell_exec($this->command());
-        // $this->cleanUp();
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
 
-        return $output;
+        $process = proc_open($this->command(), $descriptorspec, $pipes, dirname(__FILE__), null);
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+
+        return $stdout;
     }
 
     protected function cleanUp()
@@ -220,6 +239,7 @@ class PDFFromView
             '--no-stop-slow-scripts',
             "--viewport-size {$this->viewportSize}",
             "--dpi {$this->dpi}",
+            "--page-size {$this->pageSize}",
             "--javascript-delay {$this->javascriptDelay}",
             "--debug-javascript",
         ];
